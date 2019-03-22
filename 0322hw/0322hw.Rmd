@@ -1,0 +1,70 @@
+---
+title: "0322homework"
+author: "ChaoYuan"
+date: "2019年3月22日"
+output: html_document
+---
+載入資料
+```{r 載入7~12月資料,warning=F,message=FALSE}
+data07=data.table::fread('201807_data.csv',data.table = F,encoding = 'UTF-8')
+data08=data.table::fread('201808_data.csv',data.table = F,encoding = 'UTF-8')
+data09=data.table::fread('201809_data.csv',data.table = F,encoding = 'UTF-8')
+data10=data.table::fread('201810_data.csv',data.table = F,encoding = 'UTF-8')
+data11=data.table::fread('201811_data.csv',data.table = F,encoding = 'UTF-8')
+data12=data.table::fread('201812_data.csv',data.table = F,encoding = 'UTF-8')
+```
+
+
+資料結合
+```{r rbind}
+alldata=rbind(data07,data08,data09,data10,data11,data12)
+```
+
+資料篩選
+
+```{r filte}
+KP=filter(alldata,grepl("柯文哲",alldata$Message)==T)
+dd=filter(alldata,grepl("丁守中",alldata$Message)==T)
+YW=filter(alldata,grepl("姚文智",alldata$Message)==T) 
+```
+
+轉換時間格式
+```{r POSIXct}
+KP$Date=as.POSIXct(KP$Date,format="%Y/%m/%d %H:%M:%S")       
+dd$Date=as.POSIXct(dd$Date,format="%Y/%m/%d %H:%M:%S")
+YW$Date=as.POSIXct(YW$Date,format="%Y/%m/%d %H:%M:%S")
+
+```
+
+表格整理
+```{r grop_by}
+KPCount<-KP%>%group_by(month=format(Date,"%m"))%>%count()%>%mutate(type="柯文哲")
+ddCount<-dd%>%group_by(month=format(Date,"%m"))%>%count()%>%mutate(type="丁守中")
+YWCount<-YW%>%group_by(month=format(Date,"%m"))%>%count()%>%mutate(type="姚文智")
+
+```
+
+將整理出的資料結合
+```{r rbind2}
+month_rank=rbind(KPCount,ddCount,YWCount)%>%arrange((month))
+```
+
+製圖
+```{r 長條圖}
+ggplot(month_rank,aes(x=month,y=n,fill=type))+
+  geom_bar(stat="identity",position = "dodge")
+```
+
+```{r 折線圖}
+ggplot(month_rank,aes(x=month,y=n,group=type,color=type))+geom_line()
+
+```
+
+```{r 盒狀圖}
+ggplot(month_rank,aes(x=month,y=n))+
+  geom_boxplot()
+
+```
+
+
+
